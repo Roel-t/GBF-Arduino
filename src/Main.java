@@ -9,14 +9,29 @@ import twitter4j.StatusListener;
 import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import javax.swing.*;
 
 import com.fazecast.jSerialComm.SerialPort;
+
 
 
 /*
@@ -26,102 +41,115 @@ import com.fazecast.jSerialComm.SerialPort;
 
 public class Main {
 
+	static SerialPort serialPort;
 	public static void main(String[] args) throws TwitterException, FileNotFoundException {
 		
-		ConfigurationBuilder cf = new ConfigurationBuilder();
 		
-		cf.setDebugEnabled(true)
-				.setOAuthConsumerKey("O3ZsRh6L7RlfBmRXtCWAmYND1")
-				.setOAuthConsumerSecret("K5rJzYKQp3LZO3WcodzN2nN36n61fnbSUMJNwTycZKh0a1wzvi")		
-				.setOAuthAccessToken("868806062-JBalQwdWZgaM2IyJb2GQhJDtp2iHI1L8zVQprMeX")
-				.setOAuthAccessTokenSecret("6gmzZ8EHLSV0sCMgjjibusFpaYEGcgWHd5GDxdN2boSpt");
 		
-		// Create and set Window Frame at middle of screen
-		final int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
-		JFrame window = new JFrame("GBF Raids");
+		
+		
+		final int WINDOW_WIDTH = 400, WINDOW_HEIGHT = 350;
+		final JFrame window = new JFrame("GBF Raids");
+		JPanel WelcomeP = new JPanel();
 		window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		window.setLayout(null);
-		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-		int x = (int) ((dimension.getWidth()- window.getWidth())/2);
-		int y = (int) ((dimension.getHeight()- window.getHeight())/2);
-		window.setLocation(x,y);
+		window.setResizable(false);
+		final Container cp = window.getContentPane();
 		
+		WelcomeP.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		JLabel WelcomeLabel;
+		JLabel SelectionLabel;
+		JButton NextButton;
+		JComboBox<String> portList;
 		
+		WelcomeLabel = new JLabel("GBF Raid Notifier");
 		
+		gbc.weighty = 0.5;
+		gbc.gridy = 0;
+		gbc.gridx = 2;
+		gbc.gridwidth = 4;
+		gbc.anchor = GridBagConstraints.PAGE_START;
+		WelcomeP.add(WelcomeLabel,gbc);
+		
+		SelectionLabel = new JLabel("Select the port of that the Arduino is connected on");
+		gbc.weighty = 0.5;
+		gbc.gridx = 2;
+		gbc.gridy = 1;			
+		WelcomeP.add(SelectionLabel,gbc);
+		
+		portList = new JComboBox<String>();
+		portList.setPrototypeDisplayValue("XXXXXXXXXXXXXX");
+		portList.setMaximumRowCount(4);
+			//Load ports into drop down list
 		SerialPort[] ports = SerialPort.getCommPorts();
-		System.out.println("Select a port:");
-		int i = 1;
 		for(SerialPort port : ports)
-			System.out.println(i++ +  ": " + port.getSystemPortName());
+			portList.addItem(port.getSystemPortName());
+		
+		gbc.weighty = 1.2;
+		gbc.gridx = 2;
+		gbc.gridy = 2;
+
+		WelcomeP.add(portList,gbc);
+		
+		NextButton = new JButton("Next");
+		NextButton.addActionListener(new ActionListener(){
+			@Override
+			 public void actionPerformed(ActionEvent e)
+			{
+				serialPort = SerialPort.getCommPort(portList.getSelectedItem().toString());
+				if(serialPort.openPort())
+				{
+					System.out.println("Port opened successfully.");
+					cp.removeAll();
+					 window.setSize(1200,800);
+					 window.setLocationRelativeTo(null);
+					 window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+					cp.add(new MainMenu());
+					cp.validate();					
+				}
+				else 
+				{
+					JOptionPane.showMessageDialog(null, "Port couldn't open");
+					System.exit(5);
+				}
+			}
+		});
+		gbc.gridx = 2;
+		gbc.gridy = 4;
+		WelcomeP.add(NextButton,gbc);	
+		
+		
+		cp.add(WelcomeP);
+
+		
+		//Put window in middle of screen
+		window.setLocationRelativeTo(null);
+		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		window.setVisible(true);
+	
+//		SerialPort[] ports = SerialPort.getCommPorts();
+//		
+//		System.out.println("Select a port:");
+//		int i = 1;
+//		for(SerialPort port : ports)
+//			System.out.println(i++ +  ": " + port.getSystemPortName());
 		Scanner s = new Scanner(System.in);
 		int chosenPort = s.nextInt();
-
-		SerialPort serialPort = ports[chosenPort - 1];
-		if(serialPort.openPort())
-			System.out.println("Port opened successfully.");
-		else {
-			System.out.println("Unable to open the port.");
-			return;
-		}
-		//serialPort.setComPortParameters(9600, 8, 1, SerialPort.NO_PARITY);
-		serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
+//
+//		SerialPort serialPort = ports[chosenPort - 1];
+//		if(serialPort.openPort())
+//			System.out.println("Port opened successfully.");
+//		else {
+//			System.out.println("Unable to open the port.");
+//			return;
+//		}
+		
 		
 		
 		
 	
-		 TwitterStream twitterStream = new TwitterStreamFactory(cf.build()).getInstance();
-		
-		 
-		 StatusListener listener = new StatusListener() {
-		    	
-			 SerialPort t = ports[chosenPort-1];
-		    	public void onStatus(Status status) {
-		        	String test;
-		    		long bytestoWrite;
-		    		byte [] buffer;
-		    		
-		            System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText()+" "+ status.getCreatedAt());
-		            test = status.getText();
-		            buffer = test.getBytes();
-		            bytestoWrite = test.length();
-		            t.writeBytes(buffer, bytestoWrite);
-		              
-		        }
-
-		        public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-		            
-		        }
-
-		        public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-		           
-		        }
-
-		        public void onScrubGeo(long userId, long upToStatusId) {
-		            
-		        }
-
-		        public void onException(Exception ex) {
-		            
-		        }
-
-				@Override
-				public void onStallWarning(StallWarning arg0) {
-					// TODO Auto-generated method stub
-					
-				}
-		    };
-
-		    FilterQuery fq = new FilterQuery();
-		    String keywords[] = {":Battle ID"};
-		    
-
-		    fq.track(keywords);
-
-		    twitterStream.addListener(listener);
-		    twitterStream.filter(fq);      
-		    window.setVisible(true);
-		   
 	}	
 
 }
+
+

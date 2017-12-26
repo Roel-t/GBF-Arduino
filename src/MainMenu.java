@@ -1,7 +1,13 @@
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,10 +30,31 @@ import twitter4j.conf.ConfigurationBuilder;
 
 public class MainMenu extends JPanel {
 	
-		GridBagConstraints gbc = new GridBagConstraints();
+		GridBagConstraints gbc;
+		SerialPort serialPort;
+		
+		//Table
 		JTable table;
-		List<String> Filter;
-	
+		DefaultTableModel dtm;
+		JScrollPane scroll;
+		
+		//Panel
+		JLabel title;
+		JLabel col2;
+		
+		//Filter
+		private int lowAmnt= 20;
+		private int highAmnt=200;
+		JPanel Filter;
+		JButton Reset;
+		JLabel LvlLabel;
+		JLabel BossesLabel;
+		JLabel LowLabel;
+		JLabel HighLabel;
+		JFormattedTextField LowLvlFormat;
+		JFormattedTextField HighLvlFormat;
+		NumberFormat amountFormat;
+		  
 		public MainMenu()
 		{
 			setLayout(new GridBagLayout());
@@ -39,16 +66,48 @@ public class MainMenu extends JPanel {
 					.setOAuthAccessToken("868806062-JBalQwdWZgaM2IyJb2GQhJDtp2iHI1L8zVQprMeX")
 					.setOAuthAccessTokenSecret("6gmzZ8EHLSV0sCMgjjibusFpaYEGcgWHd5GDxdN2boSpt");
 			
-			SerialPort serialPort = Main.serialPort;
-			JTable table = new JTable();
+			gbc = new GridBagConstraints();
+			serialPort = Main.serialPort;
+			table = new JTable();
 			table.setAutoCreateRowSorter(true);
 			String[] columnNames = {"Level", "Boss", "Key","Time"};
-			DefaultTableModel dtm = new DefaultTableModel(0,0);
 			
+			table.addMouseListener( new MouseAdapter()
+			{
+			    public void mouseReleased(MouseEvent e)
+			    {
+			        if (e.isPopupTrigger())
+			        {
+			            JTable source = (JTable)e.getSource();
+			            int row = source.rowAtPoint( e.getPoint() );
+			            int column = source.columnAtPoint( e.getPoint() );
+
+			            if (! source.isRowSelected(row))
+			                source.changeSelection(row, column, false, false);
+
+			            int x =JOptionPane.showConfirmDialog(null, "Do you want to delete it?","Delete Confirmation",JOptionPane.YES_NO_OPTION);
+			            if(x==0)
+			            {
+			            	((DefaultTableModel)table.getModel()).removeRow(row);
+			            }
+			        }
+			    }
+			});
+			
+			dtm = new DefaultTableModel()	//Sets table to not editable
+			{
+
+			    @Override
+			    public boolean isCellEditable(int row, int column) {	
+			       //all cells false
+			       return false;
+			    }
+			};
 			dtm.setColumnIdentifiers(columnNames);
 			table.setModel(dtm);
-		
-			JScrollPane scroll = new JScrollPane(table);
+			table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+
+			scroll = new JScrollPane(table);
 			
 		
 			gbc.gridx=0;
@@ -56,7 +115,7 @@ public class MainMenu extends JPanel {
 			gbc.fill = GridBagConstraints.HORIZONTAL;
 			gbc.weightx = 1.0;
 			gbc.gridwidth = 2;
-			JLabel title = new JLabel("RAIDS");
+			title = new JLabel("RAIDS");
 			title.setOpaque(true);
 			title.setHorizontalAlignment(SwingConstants.CENTER);
 			add(title, gbc);
@@ -66,7 +125,7 @@ public class MainMenu extends JPanel {
 			gbc.gridwidth = 1;        
 			gbc.gridx=1;
 			gbc.gridy=1;  
-			JLabel col2 = new JLabel("Filters");
+			col2 = new JLabel("Filters");
 			col2.setBackground(Color.lightGray);
 			col2.setOpaque(true);
 			col2.setHorizontalAlignment(SwingConstants.CENTER);
@@ -80,10 +139,97 @@ public class MainMenu extends JPanel {
 			gbc.gridwidth = 1; 
 			add(scroll,gbc);
 			
+			
+			
+			
+			//Filter section
+			GridBagLayout lay = new GridBagLayout();
+			Filter = new JPanel(lay);
+//			  {
+//
+//		        @Override
+//		        public void paint(Graphics g)
+//		        {
+//		            super.paint(g);
+//		            int[][] dims = lay.getLayoutDimensions();
+//		            g.setColor(Color.BLUE);
+//		            int x = 0;
+//		            for (int add : dims[0])
+//		            {
+//		                x += add;
+//		                g.drawLine(x, 0, x, getHeight());
+//		            }
+//		            int y = 0;
+//		            for (int add : dims[1])
+//		            {
+//		                y += add;
+//		                g.drawLine(0, y, getWidth(), y);
+//		            }
+//		        }
+//		    };
+			
+			
 			gbc.gridx=1;
 			gbc.gridy=2;
+			add(Filter,gbc);
 			
-			//ADD the filter section
+			gbc = new GridBagConstraints();
+			
+			
+			
+			LvlLabel = new JLabel("Level Range");
+			gbc.gridx=1;
+			gbc.gridy=0;
+			
+			
+			Filter.add(LvlLabel,gbc);
+			
+			amountFormat = NumberFormat.getNumberInstance();
+			LowLvlFormat = new JFormattedTextField(amountFormat); 
+			LowLvlFormat.setValue(lowAmnt);
+			HighLvlFormat = new JFormattedTextField(amountFormat);
+			HighLvlFormat.setValue(highAmnt);
+			
+			gbc.gridx=0;
+			gbc.gridy =1;
+			
+			Filter.add(LowLvlFormat,gbc);
+			gbc.gridx =2;
+			gbc.gridy =1;
+
+			Filter.add(HighLvlFormat,gbc);
+			
+			LowLabel = new JLabel("Lowest Level");
+			gbc.gridx=0;
+			gbc.gridy =2;
+			
+			Filter.add(LowLabel,gbc);
+			HighLabel = new JLabel("Highest Level");
+
+			gbc.gridx =2;
+			gbc.gridy =2;
+			
+			Filter.add(HighLabel,gbc);
+			
+			
+			
+			
+			
+			
+			Reset = new JButton("Reset");
+			Reset.addActionListener(new ActionListener(){
+				@Override
+				 public void actionPerformed(ActionEvent e)
+				{
+					lowAmnt= 20;
+					highAmnt=200;
+				}
+			});
+		 
+			
+			
+			
+			
 			
 			
 			
@@ -124,8 +270,16 @@ public class MainMenu extends JPanel {
 			            for(int i=0;i<stat.length();i++)
 			            {
 			            	
-			            	if(k<8)		    
-			            		key += stat.charAt(i);			            	
+			            	if(k<8)
+			            	{
+			            		if(stat.charAt(i) == ' ')	//handles if they put something in front of raid key
+			            		{
+			            			key = "";
+			            			k=-1;
+			            		}	
+			            		else
+			            			key += stat.charAt(i);	
+			            	}
 			            	else if(stat.charAt(i)=='L')
 			            	{
 			            		i+=4;

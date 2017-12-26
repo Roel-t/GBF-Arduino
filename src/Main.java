@@ -80,8 +80,10 @@ public class Main {
 		portList = new JComboBox<String>();
 		portList.setPrototypeDisplayValue("XXXXXXXXXXXXXX");
 		portList.setMaximumRowCount(4);
+		portList.addItem("NO PORT");
 			//Load ports into drop down list
 		SerialPort[] ports = SerialPort.getCommPorts();
+		
 		for(SerialPort port : ports)
 			portList.addItem(port.getSystemPortName());
 		
@@ -97,8 +99,13 @@ public class Main {
 			 public void actionPerformed(ActionEvent e)
 			{
 				serialPort = SerialPort.getCommPort(portList.getSelectedItem().toString());
-				if(serialPort.openPort())
+				boolean noPort = false;
+				if(portList.getSelectedItem().toString().equals("NO PORT"))
+					noPort = true;
+				if(noPort || serialPort.openPort())
 				{
+					if(noPort)
+						serialPort = null;
 					System.out.println("Port opened successfully.");
 					cp.removeAll();
 					 window.setSize(1200,800);
@@ -126,28 +133,6 @@ public class Main {
 		window.setLocationRelativeTo(null);
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		window.setVisible(true);
-	
-//		SerialPort[] ports = SerialPort.getCommPorts();
-//		
-//		System.out.println("Select a port:");
-//		int i = 1;
-//		for(SerialPort port : ports)
-//			System.out.println(i++ +  ": " + port.getSystemPortName());
-		Scanner s = new Scanner(System.in);
-		int chosenPort = s.nextInt();
-//
-//		SerialPort serialPort = ports[chosenPort - 1];
-//		if(serialPort.openPort())
-//			System.out.println("Port opened successfully.");
-//		else {
-//			System.out.println("Unable to open the port.");
-//			return;
-//		}
-		
-		
-		
-		
-	
 	}	
 
 }

@@ -1,18 +1,26 @@
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Scanner;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -54,9 +62,12 @@ public class MainMenu extends JPanel {
 		JFormattedTextField LowLvlFormat;
 		JFormattedTextField HighLvlFormat;
 		NumberFormat amountFormat;
+		List<String> bossFormat = new ArrayList<String>();
 		  
 		public MainMenu()
 		{
+			
+			loadBosses();
 			setLayout(new GridBagLayout());
 			
 			ConfigurationBuilder cf = new ConfigurationBuilder();
@@ -72,7 +83,7 @@ public class MainMenu extends JPanel {
 			table.setAutoCreateRowSorter(true);
 			String[] columnNames = {"Level", "Boss", "Key","Time"};
 			
-			table.addMouseListener( new MouseAdapter()
+			table.addMouseListener( new MouseAdapter()	//Right click to delete row 
 			{
 			    public void mouseReleased(MouseEvent e)
 			    {
@@ -143,75 +154,87 @@ public class MainMenu extends JPanel {
 			
 			
 			//Filter section
-			GridBagLayout lay = new GridBagLayout();
-			Filter = new JPanel(lay);
-//			  {
-//
-//		        @Override
-//		        public void paint(Graphics g)
-//		        {
-//		            super.paint(g);
-//		            int[][] dims = lay.getLayoutDimensions();
-//		            g.setColor(Color.BLUE);
-//		            int x = 0;
-//		            for (int add : dims[0])
-//		            {
-//		                x += add;
-//		                g.drawLine(x, 0, x, getHeight());
-//		            }
-//		            int y = 0;
-//		            for (int add : dims[1])
-//		            {
-//		                y += add;
-//		                g.drawLine(0, y, getWidth(), y);
-//		            }
-//		        }
-//		    };
-			
+			Filter = new JPanel(new GridBagLayout());
 			
 			gbc.gridx=1;
 			gbc.gridy=2;
 			add(Filter,gbc);
 			
+			
 			gbc = new GridBagConstraints();
-			
-			
-			
 			LvlLabel = new JLabel("Level Range");
-			gbc.gridx=1;
+			Font f = LvlLabel.getFont();
+			LvlLabel.setFont(f.deriveFont(f.getStyle() | Font.BOLD));
+			
+			gbc.gridx=0;
 			gbc.gridy=0;
-			
-			
+			gbc.weighty=0.01;
+			gbc.weightx=0.33333;
+			gbc.gridwidth = 6;
+			gbc.anchor = GridBagConstraints.PAGE_START;
 			Filter.add(LvlLabel,gbc);
+			
+			
+			
+			LowLabel = new JLabel("Lowest Level");
+			LowLabel.setFont(f.deriveFont(f.getStyle() ^ Font.BOLD));
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.ipady = 0;
+			gbc.weighty=0.001;
+			gbc.weightx=0.33333;
+			gbc.gridwidth = 1;
+			gbc.gridx=0;
+			gbc.gridy =1;
+			Filter.add(LowLabel,gbc);
+			
+			
+			HighLabel = new JLabel("Highest Level");
+			HighLabel.setFont(f.deriveFont(f.getStyle() ^ Font.BOLD));
+			gbc.gridx =3;
+			gbc.gridy =1;
+			Filter.add(HighLabel,gbc);
+			
+			
+			
 			
 			amountFormat = NumberFormat.getNumberInstance();
 			LowLvlFormat = new JFormattedTextField(amountFormat); 
 			LowLvlFormat.setValue(lowAmnt);
+			LowLvlFormat.addPropertyChangeListener(new PropertyChangeListener()
+					{
+						@Override
+						public void propertyChange(PropertyChangeEvent arg0) {
+							lowAmnt = Integer.parseInt(LowLvlFormat.getText());
+						}
+					});
 			HighLvlFormat = new JFormattedTextField(amountFormat);
 			HighLvlFormat.setValue(highAmnt);
-			
+			HighLvlFormat.addPropertyChangeListener(new PropertyChangeListener()
+			{
+				@Override
+				public void propertyChange(PropertyChangeEvent arg0) {
+					highAmnt = Integer.parseInt(HighLvlFormat.getText());
+				}
+			});
+	
 			gbc.gridx=0;
-			gbc.gridy =1;
+			gbc.gridy=2;
+			gbc.weighty=0.25f;
+			gbc.weightx=0.33333;
+			gbc.gridwidth = 2;
+			gbc.insets = new Insets(0, 50, 0, 50);
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
 			
 			Filter.add(LowLvlFormat,gbc);
-			gbc.gridx =2;
-			gbc.gridy =1;
+			gbc.gridx =3;
+			gbc.gridy =2;
 
 			Filter.add(HighLvlFormat,gbc);
 			
-			LowLabel = new JLabel("Lowest Level");
-			gbc.gridx=0;
-			gbc.gridy =2;
-			
-			Filter.add(LowLabel,gbc);
-			HighLabel = new JLabel("Highest Level");
-
-			gbc.gridx =2;
-			gbc.gridy =2;
-			
-			Filter.add(HighLabel,gbc);
 			
 			
+			//Add checkbox list for filter
 			
 			
 			
@@ -225,23 +248,7 @@ public class MainMenu extends JPanel {
 					highAmnt=200;
 				}
 			});
-		 
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-
-			
-			
+		 			
 			if(serialPort !=null)
 			{
 				serialPort.setComPortParameters(9600, 8, 1, SerialPort.NO_PARITY);
@@ -320,7 +327,8 @@ public class MainMenu extends JPanel {
 			            String outputText = outputFormat.format(date);
 
 			            System.out.println(outputText);
-			            dtm.addRow(new Object[] {level,boss,key,outputText});
+			            if(bossFilter(boss) && levelFilter(level))
+			            	dtm.addRow(new Object[] {level,boss,key,outputText});
 			          
 			            
 			            if(serialPort != null)
@@ -333,7 +341,19 @@ public class MainMenu extends JPanel {
 			              
 			        }
 
-			        public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
+			        private boolean levelFilter(String level) {
+						int num = Integer.parseInt(level);
+						if(num>=lowAmnt && num<=highAmnt)
+							return true;
+						else 
+							return false;
+					}
+
+					private boolean bossFilter(String boss) {
+						return true;
+					}
+
+					public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
 			            
 			        }
 
@@ -365,6 +385,25 @@ public class MainMenu extends JPanel {
 			    twitterStream.addListener(listener);
 			    twitterStream.filter(fq);      
 		
+		}
+
+		private void loadBosses() {
+			
+			Scanner s1 = null;
+			File f1= new File("Bosses.txt");
+			try {
+				s1 = new Scanner(f1);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			while(s1.hasNext())
+			{
+				String temp = s1.nextLine();
+				bossFormat.add(temp);
+				System.out.println(temp);
+			}
+			s1.close();
 		}
 		
 }

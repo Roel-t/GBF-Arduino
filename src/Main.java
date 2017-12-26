@@ -1,32 +1,12 @@
 
-import twitter4j.StallWarning;
-import twitter4j.Status;
-import twitter4j.TwitterException;
-import twitter4j.conf.ConfigurationBuilder;
-import twitter4j.FilterQuery;
-import twitter4j.StatusDeletionNotice;
-import twitter4j.StatusListener;
-import twitter4j.TwitterStream;
-import twitter4j.TwitterStreamFactory;
-
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
+
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+
 
 import javax.swing.*;
 
@@ -42,7 +22,7 @@ import com.fazecast.jSerialComm.SerialPort;
 public class Main {
 
 	static SerialPort serialPort;
-	public static void main(String[] args) throws TwitterException, FileNotFoundException {
+	public static void main(String[] args){
 		
 		
 		

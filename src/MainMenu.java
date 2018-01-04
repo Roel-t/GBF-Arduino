@@ -1,8 +1,12 @@
+import java.awt.Checkbox;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,9 +25,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.TimerTask;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 import com.fazecast.jSerialComm.SerialPort;
 
@@ -63,13 +70,15 @@ public class MainMenu extends JPanel {
 		JFormattedTextField HighLvlFormat;
 		NumberFormat amountFormat;
 		List<String> bossFormat = new ArrayList<String>();
-		  
+		List<JCheckBox> checkboxes = new ArrayList<JCheckBox>();		  
 		public MainMenu()
 		{
-			
 			loadBosses();
 			setLayout(new GridBagLayout());
+			gbc = new GridBagConstraints();
+			serialPort = Main.serialPort;
 			
+			//Connects to Twitter
 			ConfigurationBuilder cf = new ConfigurationBuilder();
 			cf.setDebugEnabled(true)
 					.setOAuthConsumerKey("O3ZsRh6L7RlfBmRXtCWAmYND1")
@@ -77,13 +86,13 @@ public class MainMenu extends JPanel {
 					.setOAuthAccessToken("868806062-JBalQwdWZgaM2IyJb2GQhJDtp2iHI1L8zVQprMeX")
 					.setOAuthAccessTokenSecret("6gmzZ8EHLSV0sCMgjjibusFpaYEGcgWHd5GDxdN2boSpt");
 			
-			gbc = new GridBagConstraints();
-			serialPort = Main.serialPort;
+			
 			table = new JTable();
 			table.setAutoCreateRowSorter(true);
 			String[] columnNames = {"Level", "Boss", "Key","Time"};
 			
-			table.addMouseListener( new MouseAdapter()	//Right click to delete row 
+			//Right click to delete row listener
+			table.addMouseListener( new MouseAdapter()	
 			{
 			    public void mouseReleased(MouseEvent e)
 			    {
@@ -104,11 +113,12 @@ public class MainMenu extends JPanel {
 			        }
 			    }
 			});
-			
-			dtm = new DefaultTableModel()	//Sets table to not editable
+			//Sets table to not editable
+			dtm = new DefaultTableModel()	
 			{
+				private static final long serialVersionUID = 1L;
 
-			    @Override
+				@Override
 			    public boolean isCellEditable(int row, int column) {	
 			       //all cells false
 			       return false;
@@ -117,9 +127,8 @@ public class MainMenu extends JPanel {
 			dtm.setColumnIdentifiers(columnNames);
 			table.setModel(dtm);
 			table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-
 			scroll = new JScrollPane(table);
-			
+		
 		
 			gbc.gridx=0;
 			gbc.gridy=0;
@@ -153,7 +162,7 @@ public class MainMenu extends JPanel {
 			
 			
 			
-			//Filter section
+			//Filter Section
 			Filter = new JPanel(new GridBagLayout());
 			
 			gbc.gridx=1;
@@ -171,12 +180,15 @@ public class MainMenu extends JPanel {
 			gbc.weighty=0.01;
 			gbc.weightx=0.33333;
 			gbc.gridwidth = 6;
+			gbc.insets = new Insets(20, 0, 0, 0);
 			gbc.anchor = GridBagConstraints.PAGE_START;
 			Filter.add(LvlLabel,gbc);
 			
 			
 			
 			LowLabel = new JLabel("Lowest Level");
+			gbc.insets = new Insets(20, 0, 0, 0);
+
 			LowLabel.setFont(f.deriveFont(f.getStyle() ^ Font.BOLD));
 			gbc.fill = GridBagConstraints.NONE;
 			gbc.ipady = 0;
@@ -195,8 +207,8 @@ public class MainMenu extends JPanel {
 			Filter.add(HighLabel,gbc);
 			
 			
-			
-			
+		
+
 			amountFormat = NumberFormat.getNumberInstance();
 			LowLvlFormat = new JFormattedTextField(amountFormat); 
 			LowLvlFormat.setValue(lowAmnt);
@@ -235,7 +247,57 @@ public class MainMenu extends JPanel {
 			
 			
 			//Add checkbox list for filter
+			BossesLabel = new JLabel("Bosses");
+			BossesLabel.setFont(f.deriveFont(f.getStyle() | Font.BOLD)); 
+			gbc.fill = GridBagConstraints.CENTER;
+
+			gbc.gridx=0;
+			gbc.gridy=3;
+			gbc.weightx =.1;
+			gbc.gridwidth = 4;
+			gbc.insets = new Insets(0, 50, 0, 50);
+			Filter.add(BossesLabel,gbc);
 			
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+
+			gbc.gridx =0;
+			gbc.gridy=5;
+			gbc.gridwidth = 10;
+			gbc.gridheight = 1;
+			gbc.insets = new Insets(0, 0, 0, 0);
+			gbc.weighty = .1f;
+
+
+			
+			JPanel Bosses = new JPanel();
+			Bosses.setLayout(new GridLayout(20,4));
+			Filter.add(Bosses,gbc);
+
+			
+			    for (int i = 0; i <bossFormat.size(); i++) {
+			        JCheckBox checkbox = new JCheckBox(bossFormat.get(i),true);
+					checkbox.setFont(f.deriveFont(f.getStyle() ^ Font.BOLD));
+
+			        checkboxes.add(checkbox); //for further use you add it to the list
+			        Bosses.add(checkbox);
+			    }
+			JCheckBox SelectAll = new JCheckBox("Select All/Deselect All",true);
+			SelectAll.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    for (JCheckBox cb : checkboxes) {
+                        cb.setSelected(SelectAll.isSelected());
+                     
+                    }
+                }
+            });
+			gbc.gridx =0;
+			gbc.gridy=4;
+			gbc.weighty=5;
+			gbc.weighty = 0.1f;
+
+			Filter.add(SelectAll,gbc);
 			
 			
 			
@@ -244,10 +306,33 @@ public class MainMenu extends JPanel {
 				@Override
 				 public void actionPerformed(ActionEvent e)
 				{
-					lowAmnt= 20;
-					highAmnt=200;
+					TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(table.getModel());
+					table.setRowSorter(sorter);
+					List <RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
+					sortKeys.add(new RowSorter.SortKey(3, SortOrder.ASCENDING));
+					sorter.setSortKeys(sortKeys);
+					
+	            	((DefaultTableModel)table.getModel()).removeRow(0);
+	            	
+	            	sortKeys.add(new RowSorter.SortKey(3, SortOrder.DESCENDING));
+	            	sortKeys.remove(0);
+					sorter.setSortKeys(sortKeys);
 				}
+//					lowAmnt= 20;
+//					LowLvlFormat.setValue(lowAmnt);
+//					highAmnt=200;
+//					HighLvlFormat.setValue(highAmnt);
+//					SelectAll.setSelected(true);
+//					 for (JCheckBox cb : checkboxes) {
+//	                        cb.setSelected(SelectAll.isSelected());
+//	                     
+//	                    }
+//				}
 			});
+			gbc.gridx =1;
+			gbc.gridy=6;
+			gbc.gridwidth = 2;
+			Filter.add(Reset,gbc);
 		 			
 			if(serialPort !=null)
 			{
@@ -256,7 +341,7 @@ public class MainMenu extends JPanel {
 			}
 			
 			
-			
+		 
 		
 			 TwitterStream twitterStream = new TwitterStreamFactory(cf.build()).getInstance();
 			
@@ -274,7 +359,7 @@ public class MainMenu extends JPanel {
 			            String stat = status.getText();
 			            Boolean lv = false;
 			            int k=0;
-			            for(int i=0;i<stat.length();i++)
+			            for(int i=0;i<stat.length();i++)	//Parses the tweet
 			            {
 			            	
 			            	if(k<8)
@@ -326,9 +411,10 @@ public class MainMenu extends JPanel {
 						}
 			            String outputText = outputFormat.format(date);
 
-			            System.out.println(outputText);
-			            if(bossFilter(boss) && levelFilter(level))
+			           
+			            if(bossFilter(boss) && levelFilter(level))		
 			            	dtm.addRow(new Object[] {level,boss,key,outputText});
+			            
 			          
 			            
 			            if(serialPort != null)
@@ -350,7 +436,16 @@ public class MainMenu extends JPanel {
 					}
 
 					private boolean bossFilter(String boss) {
-						return true;
+						 for (JCheckBox cb : checkboxes) {
+		                       if(cb.getText().equals(boss))
+		                       {
+		                    	   if(cb.isSelected())
+		                    		   return true;
+		                    	   else 
+		                    		   return false;
+		                       } 
+		                    }
+						 return false;
 					}
 
 					public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {

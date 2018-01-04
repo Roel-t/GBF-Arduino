@@ -24,10 +24,6 @@ public class Main {
 	static SerialPort serialPort;
 	public static void main(String[] args){
 		
-		
-		
-		
-		
 		final int WINDOW_WIDTH = 400, WINDOW_HEIGHT = 350;
 		final JFrame window = new JFrame("GBF Raids");
 		JPanel WelcomeP = new JPanel();

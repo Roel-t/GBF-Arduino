@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.*;
@@ -70,7 +71,9 @@ public class MainMenu extends JPanel {
 		JFormattedTextField HighLvlFormat;
 		NumberFormat amountFormat;
 		List<String> bossFormat = new ArrayList<String>();
-		List<JCheckBox> checkboxes = new ArrayList<JCheckBox>();		  
+		List<JCheckBox> checkboxes = new ArrayList<JCheckBox>();
+		TableRowSorter<TableModel> sorter;
+		List <RowSorter.SortKey> sortKeys;
 		public MainMenu()
 		{
 			loadBosses();
@@ -300,24 +303,21 @@ public class MainMenu extends JPanel {
 			Filter.add(SelectAll,gbc);
 			
 			
+			sorter = new TableRowSorter<TableModel>(table.getModel());
+			table.setRowSorter(sorter);
+			sortKeys = new ArrayList<RowSorter.SortKey>();
+			
+			sortKeys.add(new RowSorter.SortKey(3, SortOrder.DESCENDING));
+			sorter.setSortKeys(sortKeys);
+			
 			
 			Reset = new JButton("Reset");
 			Reset.addActionListener(new ActionListener(){
 				@Override
 				 public void actionPerformed(ActionEvent e)
 				{
-					TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(table.getModel());
-					table.setRowSorter(sorter);
-					List <RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
-					sortKeys.add(new RowSorter.SortKey(3, SortOrder.ASCENDING));
-					sorter.setSortKeys(sortKeys);
 					
-	            	((DefaultTableModel)table.getModel()).removeRow(0);
-	            	
-	            	sortKeys.add(new RowSorter.SortKey(3, SortOrder.DESCENDING));
-	            	sortKeys.remove(0);
-					sorter.setSortKeys(sortKeys);
-				}
+					
 //					lowAmnt= 20;
 //					LowLvlFormat.setValue(lowAmnt);
 //					highAmnt=200;
@@ -325,9 +325,8 @@ public class MainMenu extends JPanel {
 //					SelectAll.setSelected(true);
 //					 for (JCheckBox cb : checkboxes) {
 //	                        cb.setSelected(SelectAll.isSelected());
-//	                     
 //	                    }
-//				}
+				}
 			});
 			gbc.gridx =1;
 			gbc.gridy=6;
@@ -340,16 +339,18 @@ public class MainMenu extends JPanel {
 				serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
 			}
 			
-			
 		 
-		
+			 
+		    
+		   
 			 TwitterStream twitterStream = new TwitterStreamFactory(cf.build()).getInstance();
 			
-			 
+			 //UPDATED THE TWEET PARSING TO GITHUB
 			 StatusListener listener = new StatusListener() {
 			    	
 				 	
 			    	public void onStatus(Status status) {
+			    	
 			        	String test;
 			    		long bytestoWrite;
 			    		byte [] buffer;
@@ -364,7 +365,8 @@ public class MainMenu extends JPanel {
 			            	
 			            	if(k<8)
 			            	{
-			            		if(stat.charAt(i) == ' ')	//handles if they put something in front of raid key
+			            		
+			            		if(stat.charAt(i) == ' ' || (k==0 && stat.charAt(i+9)!=':'))	//handles if they put something in front of raid key
 			            		{
 			            			key = "";
 			            			k=-1;
@@ -372,7 +374,7 @@ public class MainMenu extends JPanel {
 			            		else
 			            			key += stat.charAt(i);	
 			            	}
-			            	else if(stat.charAt(i)=='L')
+			            	else if(stat.charAt(i)=='L' && stat.charAt(i+1)=='v' && stat.charAt(i+2)=='l')
 			            	{
 			            		i+=4;
 			            		
@@ -395,7 +397,7 @@ public class MainMenu extends JPanel {
 			            	}
 			            	k++;
 			            }
-			            System.out.println("@" + status.getUser().getScreenName() + " - "+level+"-"+key+"-"+boss +"D: " + status.getCreatedAt());
+			            System.out.println("@" + status.getUser().getScreenName() + " - "+level+"-"+key+"-"+boss +" D: " + status.getCreatedAt());
 			           
 			            
 			            DateFormat outputFormat = new SimpleDateFormat("hh:mm:ss a");
@@ -470,6 +472,44 @@ public class MainMenu extends JPanel {
 						
 					}
 			    };
+			    
+			    
+			    Timer timer = new Timer();	//TIMER SET UP 
+		        timer.schedule(new TimerTask() {
+
+		            @Override
+		            public void run() {
+		            	deleteRow();
+		            	
+		            }
+
+					private void deleteRow() {
+						if(table.getModel().getRowCount()>5)
+						{
+							System.out.println("REMOVED A ROW");
+			            	SortOrder prevSorting = table.getRowSorter().getSortKeys().get(0).getSortOrder();
+							int col = table.getRowSorter().getSortKeys().get(0).getColumn();
+							System.out.println(prevSorting+"  "+col);
+							
+							sortKeys.remove(0);
+							sortKeys.add(new RowSorter.SortKey(3, SortOrder.ASCENDING));
+							sorter.setSortKeys(sortKeys);
+
+							for(int i=0;i<5;i++)
+								((DefaultTableModel)table.getModel()).removeRow(i);
+							
+							dtm.fireTableDataChanged();
+
+				        	sortKeys.add(new RowSorter.SortKey(col, prevSorting));
+				        	sortKeys.remove(0);
+							sorter.setSortKeys(sortKeys);
+						}
+						else
+							System.out.println("NO rows del");		
+					}
+		        }, 5000	/*DELAY BEFORE STARTING IS 1min*/, 20000);// SET DELAY BETWEEN EACH DELETION
+			    
+			   
 
 			    FilterQuery fq = new FilterQuery();
 			    String keywords[] = {":Battle ID"};

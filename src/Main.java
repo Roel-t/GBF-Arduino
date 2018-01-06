@@ -4,73 +4,68 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import java.io.FileNotFoundException;
-
-
 import javax.swing.*;
-
 import com.fazecast.jSerialComm.SerialPort;
 
-
-
 /*
- Program that fetches tweets from GBF raids
+ Program that fetches tweets for GBF raids
  
  */
 
 public class Main {
 
-	static SerialPort serialPort;
+	static SerialPort serialPort;	//serial port for Arduino 
+	
 	public static void main(String[] args){
 		
+		//Window
 		final int WINDOW_WIDTH = 400, WINDOW_HEIGHT = 350;
 		final JFrame window = new JFrame("GBF Raids");
-		JPanel WelcomeP = new JPanel();
 		window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 		window.setResizable(false);
-		final Container cp = window.getContentPane();
 		
-		WelcomeP.setLayout(new GridBagLayout());
+		final Container container = window.getContentPane();
+		
+		// Welcome Panel
+		JPanel welcomePanel = new JPanel();
+		welcomePanel.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
-		JLabel WelcomeLabel;
-		JLabel SelectionLabel;
-		JButton NextButton;
+		JLabel welcomeLabel;
+		JLabel selectionLabel;
+		JButton nextButton;
 		JComboBox<String> portList;
 		
-		WelcomeLabel = new JLabel("GBF Raid Notifier");
-		
-		gbc.weighty = 0.5;
-		gbc.gridy = 0;
+		welcomeLabel = new JLabel("GBF Raid Notifier");
 		gbc.gridx = 2;
+		gbc.gridy = 0;
+		gbc.weighty = 0.5;
 		gbc.gridwidth = 4;
 		gbc.anchor = GridBagConstraints.PAGE_START;
-		WelcomeP.add(WelcomeLabel,gbc);
+		welcomePanel.add(welcomeLabel,gbc);
 		
-		SelectionLabel = new JLabel("Select the port of that the Arduino is connected on");
-		gbc.weighty = 0.5;
+		selectionLabel = new JLabel("Select the port of that the Arduino is connected on");
 		gbc.gridx = 2;
 		gbc.gridy = 1;			
-		WelcomeP.add(SelectionLabel,gbc);
+		welcomePanel.add(selectionLabel,gbc);
 		
 		portList = new JComboBox<String>();
 		portList.setPrototypeDisplayValue("XXXXXXXXXXXXXX");
 		portList.setMaximumRowCount(4);
 		portList.addItem("NO PORT");
-			//Load ports into drop down list
-		SerialPort[] ports = SerialPort.getCommPorts();
 		
+		//Load ports into drop down list
+		SerialPort[] ports = SerialPort.getCommPorts();
 		for(SerialPort port : ports)
 			portList.addItem(port.getSystemPortName());
 		
 		gbc.weighty = 1.2;
 		gbc.gridx = 2;
 		gbc.gridy = 2;
-
-		WelcomeP.add(portList,gbc);
+		welcomePanel.add(portList,gbc);
 		
-		NextButton = new JButton("Next");
-		NextButton.addActionListener(new ActionListener(){
+		nextButton = new JButton("Next");
+		nextButton.addActionListener(new ActionListener()
+		{
 			@Override
 			 public void actionPerformed(ActionEvent e)
 			{
@@ -83,12 +78,12 @@ public class Main {
 					if(noPort)
 						serialPort = null;
 					System.out.println("Port opened successfully.");
-					cp.removeAll();
+					container.removeAll();
 					 window.setSize(1200,800);
 					 window.setLocationRelativeTo(null);
 					 window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-					cp.add(new MainMenu());
-					cp.validate();					
+					container.add(new MainMenu());
+					container.validate();					
 				}
 				else 
 				{
@@ -99,11 +94,10 @@ public class Main {
 		});
 		gbc.gridx = 2;
 		gbc.gridy = 4;
-		WelcomeP.add(NextButton,gbc);	
+		welcomePanel.add(nextButton,gbc);	
 		
 		
-		cp.add(WelcomeP);
-
+		container.add(welcomePanel);
 		
 		//Put window in middle of screen
 		window.setLocationRelativeTo(null);

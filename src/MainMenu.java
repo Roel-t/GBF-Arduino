@@ -10,8 +10,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -43,6 +42,8 @@ import twitter4j.conf.ConfigurationBuilder;
 
 public class MainMenu extends JPanel {
 	
+
+	private static final long serialVersionUID = 1L;
 		GridBagConstraints gbc;
 		SerialPort serialPort;
 		
@@ -577,20 +578,15 @@ public class MainMenu extends JPanel {
 
 		
 		private void loadBosses() {		
-			Scanner s1 = null;
-			File f1= new File("Bosses.txt");
-			try {
-				s1 = new Scanner(f1);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			while(s1.hasNext())
-			{
-				String temp = s1.nextLine();
-				bossFormat.add(temp);
-			}
-			s1.close();
+			InputStream in = MainMenu.class.getClassLoader().getResourceAsStream("Bosses.txt");
+			try (Scanner scanner = new Scanner(in)) {
+			    while (scanner.hasNextLine()) {
+			    	String temp = scanner.nextLine();
+					bossFormat.add(temp);
+					System.out.println(temp);
+			    }
+			    scanner.close();
+			} 
 		}
 		
 		
